@@ -1,9 +1,10 @@
+import type { ClientStorageType } from '../configuration'
 import type { CookieOptions } from '../../browser/cookie'
 import { COOKIE_ACCESS_DELAY } from '../../browser/cookie'
 import { Observable } from '../../tools/observable'
 import * as utils from '../../tools/utils'
 import { monitor } from '../internalMonitoring'
-import { retrieveSession, withCookieLockAccess } from './sessionCookieStore'
+import { retrieveSession, withClientLockAccess } from './sessionClientStore'
 
 export interface SessionStore {
   expandOrRenewSession: () => void
@@ -34,6 +35,7 @@ export const SESSION_TIME_OUT_DELAY = 4 * utils.ONE_HOUR
  */
 export function startSessionStore<TrackingType extends string>(
   options: CookieOptions,
+  clientStorageType: ClientStorageType,
   productKey: string,
   computeSessionState: (rawTrackingType?: string) => { trackingType: TrackingType; isTracked: boolean }
 ): SessionStore {
@@ -41,12 +43,13 @@ export function startSessionStore<TrackingType extends string>(
   const expireObservable = new Observable<void>()
 
   const watchSessionTimeoutId = setInterval(monitor(watchSession), COOKIE_ACCESS_DELAY)
-  let sessionCache: SessionState = retrieveActiveSession()
+  let sessionCache: SessionState = retrieveActiveSession(clientStorageType)
 
   function expandOrRenewSession() {
     let isTracked: boolean
-    withCookieLockAccess({
+    withClientLockAccess({
       options,
+      clientStorageType,
       process: (cookieSession) => {
         const synchronizedSession = synchronizeSession(cookieSession)
         isTracked = expandOrRenewCookie(synchronizedSession)
@@ -62,8 +65,9 @@ export function startSessionStore<TrackingType extends string>(
   }
 
   function expandSession() {
-    withCookieLockAccess({
+    withClientLockAccess({
       options,
+      clientStorageType,
       process: (cookieSession) => (hasSessionInCache() ? synchronizeSession(cookieSession) : undefined),
     })
   }
@@ -74,8 +78,9 @@ export function startSessionStore<TrackingType extends string>(
    * - if the session is not active, clear the session cookie and expire the session cache
    */
   function watchSession() {
-    withCookieLockAccess({
+    withClientLockAccess({
       options,
+      clientStorageType,
       process: (cookieSession) => (!isActiveSession(cookieSession) ? {} : undefined),
       after: synchronizeSession,
     })
@@ -123,8 +128,8 @@ export function startSessionStore<TrackingType extends string>(
     renewObservable.notify()
   }
 
-  function retrieveActiveSession(): SessionState {
-    const session = retrieveSession()
+  function retrieveActiveSession(clientStorageType: ClientStorageType): SessionState {
+    const session = retrieveSession(clientStorageType)
     if (isActiveSession(session)) {
       return session
     }

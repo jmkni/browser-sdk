@@ -2,7 +2,7 @@ import type { RelativeTime } from '@datadog/browser-core'
 import {
   COOKIE_ACCESS_DELAY,
   getCookie,
-  SESSION_COOKIE_NAME,
+  SESSION_IDENTIFIER,
   setCookie,
   stopSessionManager,
   ONE_SECOND,
@@ -43,8 +43,8 @@ describe('logs session manager', () => {
 
     startLogsSessionManager(configuration as LogsConfiguration)
 
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.TRACKED}`)
-    expect(getCookie(SESSION_COOKIE_NAME)).toMatch(/id=[a-f0-9-]+/)
+    expect(getCookie(SESSION_IDENTIFIER)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.TRACKED}`)
+    expect(getCookie(SESSION_IDENTIFIER)).toMatch(/id=[a-f0-9-]+/)
   })
 
   it('when not tracked should store tracking type', () => {
@@ -52,66 +52,66 @@ describe('logs session manager', () => {
 
     startLogsSessionManager(configuration as LogsConfiguration)
 
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.NOT_TRACKED}`)
-    expect(getCookie(SESSION_COOKIE_NAME)).not.toContain('id=')
+    expect(getCookie(SESSION_IDENTIFIER)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.NOT_TRACKED}`)
+    expect(getCookie(SESSION_IDENTIFIER)).not.toContain('id=')
   })
 
   it('when tracked should keep existing tracking type and session id', () => {
-    setCookie(SESSION_COOKIE_NAME, 'id=abcdef&logs=1', DURATION)
+    setCookie(SESSION_IDENTIFIER, 'id=abcdef&logs=1', DURATION)
 
     startLogsSessionManager(configuration as LogsConfiguration)
 
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.TRACKED}`)
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain('id=abcdef')
+    expect(getCookie(SESSION_IDENTIFIER)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.TRACKED}`)
+    expect(getCookie(SESSION_IDENTIFIER)).toContain('id=abcdef')
   })
 
   it('when not tracked should keep existing tracking type', () => {
-    setCookie(SESSION_COOKIE_NAME, 'logs=0', DURATION)
+    setCookie(SESSION_IDENTIFIER, 'logs=0', DURATION)
 
     startLogsSessionManager(configuration as LogsConfiguration)
 
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.NOT_TRACKED}`)
+    expect(getCookie(SESSION_IDENTIFIER)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.NOT_TRACKED}`)
   })
 
   it('should renew on activity after expiration', () => {
     startLogsSessionManager(configuration as LogsConfiguration)
 
-    setCookie(SESSION_COOKIE_NAME, '', DURATION)
-    expect(getCookie(SESSION_COOKIE_NAME)).toBeUndefined()
+    setCookie(SESSION_IDENTIFIER, '', DURATION)
+    expect(getCookie(SESSION_IDENTIFIER)).toBeUndefined()
     clock.tick(COOKIE_ACCESS_DELAY)
 
     tracked = true
     document.body.click()
 
-    expect(getCookie(SESSION_COOKIE_NAME)).toMatch(/id=[a-f0-9-]+/)
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.TRACKED}`)
+    expect(getCookie(SESSION_IDENTIFIER)).toMatch(/id=[a-f0-9-]+/)
+    expect(getCookie(SESSION_IDENTIFIER)).toContain(`${LOGS_SESSION_KEY}=${LoggerTrackingType.TRACKED}`)
   })
 
   describe('findSession', () => {
     it('should return the current session', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&logs=1', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&logs=1', DURATION)
       const logsSessionManager = startLogsSessionManager(configuration as LogsConfiguration)
       expect(logsSessionManager.findTrackedSession()!.id).toBe('abcdef')
     })
 
     it('should return undefined if the session is not tracked', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&logs=0', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&logs=0', DURATION)
       const logsSessionManager = startLogsSessionManager(configuration as LogsConfiguration)
       expect(logsSessionManager.findTrackedSession()).toBe(undefined)
     })
 
     it('should return undefined if the session has expired', () => {
       const logsSessionManager = startLogsSessionManager(configuration as LogsConfiguration)
-      setCookie(SESSION_COOKIE_NAME, '', DURATION)
+      setCookie(SESSION_IDENTIFIER, '', DURATION)
       clock.tick(COOKIE_ACCESS_DELAY)
       expect(logsSessionManager.findTrackedSession()).toBe(undefined)
     })
 
     it('should return session corresponding to start time', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&logs=1', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&logs=1', DURATION)
       const logsSessionManager = startLogsSessionManager(configuration as LogsConfiguration)
       clock.tick(10 * ONE_SECOND)
-      setCookie(SESSION_COOKIE_NAME, '', DURATION)
+      setCookie(SESSION_IDENTIFIER, '', DURATION)
       clock.tick(COOKIE_ACCESS_DELAY)
       expect(logsSessionManager.findTrackedSession()).toBeUndefined()
       expect(logsSessionManager.findTrackedSession(0 as RelativeTime)!.id).toBe('abcdef')

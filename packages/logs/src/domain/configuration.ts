@@ -8,6 +8,7 @@ import {
   removeDuplicates,
   ConsoleApiName,
   objectHasValue,
+  ClientStorageType
 } from '@datadog/browser-core'
 import type { LogsEvent } from '../logsEvent.types'
 import type { StatusType } from './logger'
@@ -16,6 +17,7 @@ export interface LogsInitConfiguration extends InitConfiguration {
   beforeSend?: ((event: LogsEvent) => void | boolean) | undefined
   forwardErrorsToLogs?: boolean | undefined
   forwardConsoleLogs?: readonly ConsoleApiName[] | 'all' | undefined
+  clientStorageType?: ClientStorageType | undefined;
 }
 
 export type HybridInitConfiguration = Omit<LogsInitConfiguration, 'clientToken'>
@@ -24,6 +26,7 @@ export interface LogsConfiguration extends Configuration {
   forwardErrorsToLogs: boolean
   forwardConsoleLogs: ConsoleApiName[]
   requestErrorResponseLengthLimit: number
+  clientStorageType: ClientStorageType
 }
 
 /**
@@ -69,6 +72,9 @@ export function validateAndBuildLogsConfiguration(
       forwardErrorsToLogs: !!initConfiguration.forwardErrorsToLogs,
       forwardConsoleLogs: removeDuplicates(forwardConsoleLogs),
       requestErrorResponseLengthLimit: DEFAULT_REQUEST_ERROR_RESPONSE_LENGTH_LIMIT,
+      clientStorageType: objectHasValue(ClientStorageType, initConfiguration.clientStorageType)
+      ? initConfiguration.clientStorageType
+      : ClientStorageType.COOKIE
     },
     baseConfiguration
   )

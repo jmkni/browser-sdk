@@ -2,6 +2,7 @@ import type { Configuration, InitConfiguration } from '@datadog/browser-core'
 import {
   assign,
   DefaultPrivacyLevel,
+  ClientStorageType,
   display,
   isPercentage,
   objectHasValue,
@@ -28,6 +29,9 @@ export interface RumInitConfiguration extends InitConfiguration {
 
   // view options
   trackViewsManually?: boolean | undefined
+
+  // client storage type
+  clientStorageType?: ClientStorageType | undefined;
 }
 
 export type HybridInitConfiguration = Omit<RumInitConfiguration, 'applicationId' | 'clientToken'>
@@ -41,6 +45,7 @@ export interface RumConfiguration extends Configuration {
   replaySampleRate: number
   trackInteractions: boolean
   trackViewsManually: boolean
+  clientStorageType: ClientStorageType
 }
 
 export function validateAndBuildRumConfiguration(
@@ -83,6 +88,9 @@ export function validateAndBuildRumConfiguration(
       defaultPrivacyLevel: objectHasValue(DefaultPrivacyLevel, initConfiguration.defaultPrivacyLevel)
         ? initConfiguration.defaultPrivacyLevel
         : DefaultPrivacyLevel.MASK_USER_INPUT,
+      clientStorageType: objectHasValue(ClientStorageType, initConfiguration.clientStorageType)
+        ? initConfiguration.clientStorageType
+        : ClientStorageType.COOKIE
     },
     baseConfiguration
   )

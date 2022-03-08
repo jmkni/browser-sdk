@@ -4,7 +4,7 @@ import type { CookieOptions } from '../../browser/cookie'
 import { getCookie, setCookie, COOKIE_ACCESS_DELAY } from '../../browser/cookie'
 import type { SessionStore } from './sessionStore'
 import { startSessionStore, SESSION_EXPIRATION_DELAY, SESSION_TIME_OUT_DELAY } from './sessionStore'
-import { SESSION_COOKIE_NAME } from './sessionCookieStore'
+import { SESSION_IDENTIFIER } from './sessionClientStore'
 
 const enum FakeTrackingType {
   TRACKED = 'tracked',
@@ -19,7 +19,7 @@ const COOKIE_OPTIONS: CookieOptions = {}
 
 function setSessionInStore(trackingType: FakeTrackingType = FakeTrackingType.TRACKED, id?: string, expire?: number) {
   setCookie(
-    SESSION_COOKIE_NAME,
+    SESSION_IDENTIFIER,
     `${id ? `id=${id}&` : ''}${PRODUCT_KEY}=${trackingType}&created=${Date.now()}&expire=${
       expire || Date.now() + SESSION_EXPIRATION_DELAY
     }`,
@@ -28,21 +28,21 @@ function setSessionInStore(trackingType: FakeTrackingType = FakeTrackingType.TRA
 }
 
 function expectTrackedSessionToBeInStore(id?: string) {
-  expect(getCookie(SESSION_COOKIE_NAME)).toMatch(new RegExp(`id=${id ? id : '[a-f0-9-]+'}`))
-  expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${PRODUCT_KEY}=${FakeTrackingType.TRACKED}`)
+  expect(getCookie(SESSION_IDENTIFIER)).toMatch(new RegExp(`id=${id ? id : '[a-f0-9-]+'}`))
+  expect(getCookie(SESSION_IDENTIFIER)).toContain(`${PRODUCT_KEY}=${FakeTrackingType.TRACKED}`)
 }
 
 function expectNotTrackedSessionToBeInStore() {
-  expect(getCookie(SESSION_COOKIE_NAME)).not.toContain('id=')
-  expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${PRODUCT_KEY}=${FakeTrackingType.NOT_TRACKED}`)
+  expect(getCookie(SESSION_IDENTIFIER)).not.toContain('id=')
+  expect(getCookie(SESSION_IDENTIFIER)).toContain(`${PRODUCT_KEY}=${FakeTrackingType.NOT_TRACKED}`)
 }
 
 function getStoreExpiration() {
-  return /expire=(\d+)/.exec(getCookie(SESSION_COOKIE_NAME)!)?.[1]
+  return /expire=(\d+)/.exec(getCookie(SESSION_IDENTIFIER)!)?.[1]
 }
 
 function resetSessionInStore() {
-  setCookie(SESSION_COOKIE_NAME, '', DURATION)
+  setCookie(SESSION_IDENTIFIER, '', DURATION)
 }
 
 describe('session store', () => {

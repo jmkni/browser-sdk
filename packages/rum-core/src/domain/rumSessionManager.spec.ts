@@ -3,7 +3,7 @@ import {
   COOKIE_ACCESS_DELAY,
   getCookie,
   isIE,
-  SESSION_COOKIE_NAME,
+  SESSION_IDENTIFIER,
   setCookie,
   stopSessionManager,
   ONE_SECOND,
@@ -62,8 +62,8 @@ describe('rum session manager', () => {
 
       expect(expireSessionSpy).not.toHaveBeenCalled()
       expect(renewSessionSpy).not.toHaveBeenCalled()
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_REPLAY}`)
-      expect(getCookie(SESSION_COOKIE_NAME)).toMatch(/id=[a-f0-9-]/)
+      expect(getCookie(SESSION_IDENTIFIER)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_REPLAY}`)
+      expect(getCookie(SESSION_IDENTIFIER)).toMatch(/id=[a-f0-9-]/)
     })
 
     it('when tracked with lite plan should store session type and id', () => {
@@ -73,8 +73,8 @@ describe('rum session manager', () => {
 
       expect(expireSessionSpy).not.toHaveBeenCalled()
       expect(renewSessionSpy).not.toHaveBeenCalled()
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_LITE}`)
-      expect(getCookie(SESSION_COOKIE_NAME)).toMatch(/id=[a-f0-9-]/)
+      expect(getCookie(SESSION_IDENTIFIER)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_LITE}`)
+      expect(getCookie(SESSION_IDENTIFIER)).toMatch(/id=[a-f0-9-]/)
     })
 
     it('when not tracked should store session type', () => {
@@ -84,37 +84,37 @@ describe('rum session manager', () => {
 
       expect(expireSessionSpy).not.toHaveBeenCalled()
       expect(renewSessionSpy).not.toHaveBeenCalled()
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.NOT_TRACKED}`)
-      expect(getCookie(SESSION_COOKIE_NAME)).not.toContain('id=')
+      expect(getCookie(SESSION_IDENTIFIER)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.NOT_TRACKED}`)
+      expect(getCookie(SESSION_IDENTIFIER)).not.toContain('id=')
     })
 
     it('when tracked should keep existing session type and id', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&rum=1', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&rum=1', DURATION)
 
       startRumSessionManager(configuration, lifeCycle)
 
       expect(expireSessionSpy).not.toHaveBeenCalled()
       expect(renewSessionSpy).not.toHaveBeenCalled()
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_REPLAY}`)
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain('id=abcdef')
+      expect(getCookie(SESSION_IDENTIFIER)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_REPLAY}`)
+      expect(getCookie(SESSION_IDENTIFIER)).toContain('id=abcdef')
     })
 
     it('when not tracked should keep existing session type', () => {
-      setCookie(SESSION_COOKIE_NAME, 'rum=0', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'rum=0', DURATION)
 
       startRumSessionManager(configuration, lifeCycle)
 
       expect(expireSessionSpy).not.toHaveBeenCalled()
       expect(renewSessionSpy).not.toHaveBeenCalled()
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.NOT_TRACKED}`)
+      expect(getCookie(SESSION_IDENTIFIER)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.NOT_TRACKED}`)
     })
 
     it('should renew on activity after expiration', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&rum=1', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&rum=1', DURATION)
       startRumSessionManager(configuration, lifeCycle)
 
-      setCookie(SESSION_COOKIE_NAME, '', DURATION)
-      expect(getCookie(SESSION_COOKIE_NAME)).toBeUndefined()
+      setCookie(SESSION_IDENTIFIER, '', DURATION)
+      expect(getCookie(SESSION_IDENTIFIER)).toBeUndefined()
       expect(expireSessionSpy).not.toHaveBeenCalled()
       expect(renewSessionSpy).not.toHaveBeenCalled()
       clock.tick(COOKIE_ACCESS_DELAY)
@@ -124,50 +124,50 @@ describe('rum session manager', () => {
 
       expect(expireSessionSpy).toHaveBeenCalled()
       expect(renewSessionSpy).toHaveBeenCalled()
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_REPLAY}`)
-      expect(getCookie(SESSION_COOKIE_NAME)).toMatch(/id=[a-f0-9-]/)
+      expect(getCookie(SESSION_IDENTIFIER)).toContain(`${RUM_SESSION_KEY}=${RumTrackingType.TRACKED_REPLAY}`)
+      expect(getCookie(SESSION_IDENTIFIER)).toMatch(/id=[a-f0-9-]/)
     })
   })
 
   describe('findSession', () => {
     it('should return the current session', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&rum=1', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&rum=1', DURATION)
       const rumSessionManager = startRumSessionManager(configuration, lifeCycle)
       expect(rumSessionManager.findTrackedSession()!.id).toBe('abcdef')
     })
 
     it('should return undefined if the session is not tracked', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&rum=0', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&rum=0', DURATION)
       const rumSessionManager = startRumSessionManager(configuration, lifeCycle)
       expect(rumSessionManager.findTrackedSession()).toBe(undefined)
     })
 
     it('should return undefined if the session has expired', () => {
       const rumSessionManager = startRumSessionManager(configuration, lifeCycle)
-      setCookie(SESSION_COOKIE_NAME, '', DURATION)
+      setCookie(SESSION_IDENTIFIER, '', DURATION)
       clock.tick(COOKIE_ACCESS_DELAY)
       expect(rumSessionManager.findTrackedSession()).toBe(undefined)
     })
 
     it('should return session corresponding to start time', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&rum=1', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&rum=1', DURATION)
       const rumSessionManager = startRumSessionManager(configuration, lifeCycle)
       clock.tick(10 * ONE_SECOND)
-      setCookie(SESSION_COOKIE_NAME, '', DURATION)
+      setCookie(SESSION_IDENTIFIER, '', DURATION)
       clock.tick(COOKIE_ACCESS_DELAY)
       expect(rumSessionManager.findTrackedSession()).toBeUndefined()
       expect(rumSessionManager.findTrackedSession(0 as RelativeTime)!.id).toBe('abcdef')
     })
 
     it('should return session with replay plan', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&rum=1', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&rum=1', DURATION)
       const rumSessionManager = startRumSessionManager(configuration, lifeCycle)
       expect(rumSessionManager.findTrackedSession()!.hasReplayPlan).toBeTrue()
       expect(rumSessionManager.findTrackedSession()!.hasLitePlan).toBeFalse()
     })
 
     it('should return session with lite plan', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&rum=2', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&rum=2', DURATION)
       const rumSessionManager = startRumSessionManager(configuration, lifeCycle)
       expect(rumSessionManager.findTrackedSession()!.hasReplayPlan).toBeFalse()
       expect(rumSessionManager.findTrackedSession()!.hasLitePlan).toBeTrue()

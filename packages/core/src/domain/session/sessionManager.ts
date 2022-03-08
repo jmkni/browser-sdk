@@ -1,3 +1,4 @@
+import { ClientStorageType } from '../configuration'
 import type { CookieOptions } from '../../browser/cookie'
 import type { Observable } from '../../tools/observable'
 import * as utils from '../../tools/utils'
@@ -26,11 +27,16 @@ let stopCallbacks: Array<() => void> = []
 
 export function startSessionManager<TrackingType extends string>(
   options: CookieOptions,
+  clientStorageType: ClientStorageType,
   productKey: string,
   computeSessionState: (rawTrackingType?: string) => { trackingType: TrackingType; isTracked: boolean }
 ): SessionManager<TrackingType> {
-  tryOldCookiesMigration(options)
-  const sessionStore = startSessionStore(options, productKey, computeSessionState)
+
+  if (clientStorageType === ClientStorageType.COOKIE) {
+    tryOldCookiesMigration(options)
+  }
+  
+  const sessionStore = startSessionStore(options, clientStorageType, productKey, computeSessionState)
   stopCallbacks.push(() => sessionStore.stop())
 
   const sessionContextHistory = new ContextHistory<SessionContext<TrackingType>>(SESSION_CONTEXT_TIMEOUT_DELAY)
@@ -62,6 +68,9 @@ export function startSessionManager<TrackingType extends string>(
     expireObservable: sessionStore.expireObservable,
   }
 }
+
+
+
 
 export function stopSessionManager() {
   stopCallbacks.forEach((e) => e())

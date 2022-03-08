@@ -4,6 +4,7 @@ export {
   buildCookieOptions,
   validateAndBuildConfiguration,
   DefaultPrivacyLevel,
+  ClientStorageType,
   EndpointBuilder,
   isExperimentalFeatureEnabled,
   updateExperimentalFeatures,
@@ -26,15 +27,6 @@ export {
   setDebugMode,
 } from './domain/internalMonitoring'
 export { Observable, Subscription } from './tools/observable'
-export {
-  startSessionManager,
-  SessionManager,
-  // Exposed for tests
-  stopSessionManager,
-} from './domain/session/sessionManager'
-export {
-  SESSION_TIME_OUT_DELAY, // Exposed for tests
-} from './domain/session/sessionStore'
 export { HttpRequest, Batch, canUseEventBridge, getEventBridge } from './transport'
 export * from './tools/display'
 export * from './tools/urlPolyfill'
@@ -61,4 +53,16 @@ export { catchUserErrors } from './tools/catchUserErrors'
 export { createContextManager } from './tools/contextManager'
 export { limitModification } from './tools/limitModification'
 export { ContextHistory, CLEAR_OLD_CONTEXTS_INTERVAL } from './tools/contextHistory'
-export { SESSION_COOKIE_NAME } from './domain/session/sessionCookieStore'
+
+export {
+  startSessionManager,
+  SessionManager,
+  // Exposed for tests
+  stopSessionManager,
+} from './domain/session/sessionManager'
+export {
+  SESSION_TIME_OUT_DELAY, // Exposed for tests
+} from './domain/session/sessionStore'
+export { SESSION_IDENTIFIER } from './domain/session/sessionClientStore'
+
+

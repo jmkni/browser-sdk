@@ -1,14 +1,15 @@
+import { ClientStorageType } from '../configuration'
 import { stubCookie, mockClock } from '../../../test/specHelper'
 import { isChromium } from '../../tools/browserDetection'
 import {
-  SESSION_COOKIE_NAME,
+  SESSION_IDENTIFIER,
   toSessionString,
   retrieveSession,
   persistSession,
   MAX_NUMBER_OF_LOCK_RETRIES,
   LOCK_RETRY_DELAY,
-  withCookieLockAccess,
-} from './sessionCookieStore'
+  withClientLockAccess,
+} from './sessionClientStore'
 import type { SessionState } from './sessionStore'
 
 describe('session cookie store', () => {
@@ -36,7 +37,11 @@ describe('session cookie store', () => {
       persistSession(initialSession, COOKIE_OPTIONS)
       processSpy.and.returnValue({ ...otherSession })
 
-      withCookieLockAccess({ options: COOKIE_OPTIONS, process: processSpy, after: afterSpy })
+      withClientLockAccess({ 
+        options: COOKIE_OPTIONS, 
+        clientStorageType: ClientStorageType.COOKIE, 
+        process: processSpy, 
+        after: afterSpy })
 
       expect(processSpy).toHaveBeenCalledWith(initialSession)
       const expectedSession = { ...otherSession, expire: jasmine.any(String) }
@@ -48,7 +53,11 @@ describe('session cookie store', () => {
       persistSession(initialSession, COOKIE_OPTIONS)
       processSpy.and.returnValue({})
 
-      withCookieLockAccess({ options: COOKIE_OPTIONS, process: processSpy, after: afterSpy })
+      withClientLockAccess({ 
+        options: COOKIE_OPTIONS, 
+        clientStorageType: ClientStorageType.COOKIE, 
+        process: processSpy, 
+        after: afterSpy })
 
       expect(processSpy).toHaveBeenCalledWith(initialSession)
       const expectedSession = {}
@@ -60,7 +69,11 @@ describe('session cookie store', () => {
       persistSession(initialSession, COOKIE_OPTIONS)
       processSpy.and.returnValue(undefined)
 
-      withCookieLockAccess({ options: COOKIE_OPTIONS, process: processSpy, after: afterSpy })
+      withClientLockAccess({ 
+        options: COOKIE_OPTIONS, 
+        clientStorageType: ClientStorageType.COOKIE, 
+        process: processSpy, 
+        after: afterSpy })
 
       expect(processSpy).toHaveBeenCalledWith(initialSession)
       expect(retrieveSession()).toEqual(initialSession)
@@ -77,7 +90,11 @@ describe('session cookie store', () => {
       persistSession(initialSession, COOKIE_OPTIONS)
       processSpy.and.callFake((session) => ({ ...otherSession, lock: session.lock }))
 
-      withCookieLockAccess({ options: COOKIE_OPTIONS, process: processSpy, after: afterSpy })
+      withClientLockAccess({ 
+        options: COOKIE_OPTIONS, 
+        clientStorageType: ClientStorageType.COOKIE, 
+        process: processSpy, 
+        after: afterSpy })
 
       expect(processSpy).toHaveBeenCalledWith({ ...initialSession, lock: jasmine.any(String) })
       const expectedSession = { ...otherSession, expire: jasmine.any(String) }
@@ -89,7 +106,11 @@ describe('session cookie store', () => {
       persistSession(initialSession, COOKIE_OPTIONS)
       processSpy.and.returnValue({})
 
-      withCookieLockAccess({ options: COOKIE_OPTIONS, process: processSpy, after: afterSpy })
+      withClientLockAccess({ 
+        options: COOKIE_OPTIONS, 
+        clientStorageType: ClientStorageType.COOKIE, 
+        process: processSpy, 
+        after: afterSpy })
 
       expect(processSpy).toHaveBeenCalledWith({ ...initialSession, lock: jasmine.any(String) })
       const expectedSession = {}
@@ -101,7 +122,11 @@ describe('session cookie store', () => {
       persistSession(initialSession, COOKIE_OPTIONS)
       processSpy.and.returnValue(undefined)
 
-      withCookieLockAccess({ options: COOKIE_OPTIONS, process: processSpy, after: afterSpy })
+      withClientLockAccess({ 
+        options: COOKIE_OPTIONS, 
+        clientStorageType: ClientStorageType.COOKIE, 
+        process: processSpy, 
+        after: afterSpy })
 
       expect(processSpy).toHaveBeenCalledWith({ ...initialSession, lock: jasmine.any(String) })
       expect(retrieveSession()).toEqual(initialSession)
@@ -134,7 +159,7 @@ describe('session cookie store', () => {
     }
 
     function buildSessionString(currentState: SessionState) {
-      return `${SESSION_COOKIE_NAME}=${toSessionString(currentState)}`
+      return `${SESSION_IDENTIFIER}=${toSessionString(currentState)}`
     }
 
     ;[
@@ -165,8 +190,9 @@ describe('session cookie store', () => {
         persistSession(initialSession, COOKIE_OPTIONS)
         processSpy.and.callFake((session) => ({ ...session, processed: 'processed' } as SessionState))
 
-        withCookieLockAccess({
+        withClientLockAccess({
           options: COOKIE_OPTIONS,
+          clientStorageType: ClientStorageType.COOKIE, 
           process: processSpy,
           after: (afterSession) => {
             // session with 'other' value on process
@@ -199,7 +225,11 @@ describe('session cookie store', () => {
       cookie.setSpy.calls.reset()
 
       cookie.getSpy.and.returnValue(buildSessionString({ ...initialSession, lock: 'locked' }))
-      withCookieLockAccess({ options: COOKIE_OPTIONS, process: processSpy, after: afterSpy })
+      withClientLockAccess({ 
+        options: COOKIE_OPTIONS, 
+        clientStorageType: ClientStorageType.COOKIE, 
+        process: processSpy, 
+        after: afterSpy })
 
       clock.tick(MAX_NUMBER_OF_LOCK_RETRIES * LOCK_RETRY_DELAY)
       expect(processSpy).not.toHaveBeenCalled()
@@ -218,13 +248,15 @@ describe('session cookie store', () => {
       })
       persistSession(initialSession, COOKIE_OPTIONS)
 
-      withCookieLockAccess({
+      withClientLockAccess({
         options: COOKIE_OPTIONS,
+        clientStorageType: ClientStorageType.COOKIE, 
         process: (session) => ({ ...session, value: 'foo' }),
         after: afterSpy,
       })
-      withCookieLockAccess({
+      withClientLockAccess({
         options: COOKIE_OPTIONS,
+        clientStorageType: ClientStorageType.COOKIE, 
         process: (session) => ({ ...session, value: `${session.value || ''}bar` }),
         after: (session) => {
           expect(session.value).toBe('foobar')

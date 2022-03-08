@@ -8,7 +8,7 @@ import { isIE } from '../../tools/browserDetection'
 import type { SessionManager } from './sessionManager'
 import { startSessionManager, stopSessionManager, VISIBILITY_CHECK_DELAY } from './sessionManager'
 import { SESSION_TIME_OUT_DELAY, SESSION_EXPIRATION_DELAY } from './sessionStore'
-import { SESSION_COOKIE_NAME } from './sessionCookieStore'
+import { SESSION_IDENTIFIER } from './sessionClientStore'
 
 const enum FakeTrackingType {
   NOT_TRACKED = 'not-tracked',
@@ -22,23 +22,23 @@ describe('startSessionManager', () => {
   let clock: Clock
 
   function expireSession() {
-    setCookie(SESSION_COOKIE_NAME, '', DURATION)
+    setCookie(SESSION_IDENTIFIER, '', DURATION)
     clock.tick(COOKIE_ACCESS_DELAY)
   }
 
   function expectSessionIdToBe(sessionManager: SessionManager<FakeTrackingType>, sessionId: string) {
     expect(sessionManager.findActiveSession()!.id).toBe(sessionId)
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain(`id=${sessionId}`)
+    expect(getCookie(SESSION_IDENTIFIER)).toContain(`id=${sessionId}`)
   }
 
   function expectSessionIdToBeDefined(sessionManager: SessionManager<FakeTrackingType>) {
     expect(sessionManager.findActiveSession()!.id).toMatch(/^[a-f0-9-]+$/)
-    expect(getCookie(SESSION_COOKIE_NAME)).toMatch(/id=[a-f0-9-]+/)
+    expect(getCookie(SESSION_IDENTIFIER)).toMatch(/id=[a-f0-9-]+/)
   }
 
   function expectSessionIdToNotBeDefined(sessionManager: SessionManager<FakeTrackingType>) {
     expect(sessionManager.findActiveSession()?.id).toBeUndefined()
-    expect(getCookie(SESSION_COOKIE_NAME)).not.toContain('id=')
+    expect(getCookie(SESSION_IDENTIFIER)).not.toContain('id=')
   }
 
   function expectTrackingTypeToBe(
@@ -47,12 +47,12 @@ describe('startSessionManager', () => {
     trackingType: FakeTrackingType
   ) {
     expect(sessionManager.findActiveSession()!.trackingType).toEqual(trackingType)
-    expect(getCookie(SESSION_COOKIE_NAME)).toContain(`${productKey}=${trackingType}`)
+    expect(getCookie(SESSION_IDENTIFIER)).toContain(`${productKey}=${trackingType}`)
   }
 
   function expectTrackingTypeToNotBeDefined(sessionManager: SessionManager<FakeTrackingType>, productKey: string) {
     expect(sessionManager.findActiveSession()?.trackingType).toBeUndefined()
-    expect(getCookie(SESSION_COOKIE_NAME)).not.toContain(`${productKey}=`)
+    expect(getCookie(SESSION_IDENTIFIER)).not.toContain(`${productKey}=`)
   }
 
   beforeEach(() => {
@@ -92,7 +92,7 @@ describe('startSessionManager', () => {
     })
 
     it('when tracked should keep existing tracking type and session id', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcdef&first=tracked', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcdef&first=tracked', DURATION)
 
       const sessionManager = startSessionManager(COOKIE_OPTIONS, FIRST_PRODUCT_KEY, () => ({
         isTracked: true,
@@ -104,7 +104,7 @@ describe('startSessionManager', () => {
     })
 
     it('when not tracked should keep existing tracking type', () => {
-      setCookie(SESSION_COOKIE_NAME, 'first=not-tracked', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'first=not-tracked', DURATION)
 
       const sessionManager = startSessionManager(COOKIE_OPTIONS, FIRST_PRODUCT_KEY, () => ({
         isTracked: false,
@@ -165,19 +165,19 @@ describe('startSessionManager', () => {
     })
 
     it('should be called with an invalid value if the cookie has an invalid value', () => {
-      setCookie(SESSION_COOKIE_NAME, 'first=invalid', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'first=invalid', DURATION)
       startSessionManager(COOKIE_OPTIONS, FIRST_PRODUCT_KEY, spy)
       expect(spy).toHaveBeenCalledWith('invalid')
     })
 
     it('should be called with TRACKED', () => {
-      setCookie(SESSION_COOKIE_NAME, 'first=tracked', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'first=tracked', DURATION)
       startSessionManager(COOKIE_OPTIONS, FIRST_PRODUCT_KEY, spy)
       expect(spy).toHaveBeenCalledWith(FakeTrackingType.TRACKED)
     })
 
     it('should be called with NOT_TRACKED', () => {
-      setCookie(SESSION_COOKIE_NAME, 'first=not-tracked', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'first=not-tracked', DURATION)
       startSessionManager(COOKIE_OPTIONS, FIRST_PRODUCT_KEY, spy)
       expect(spy).toHaveBeenCalledWith(FakeTrackingType.NOT_TRACKED)
     })
@@ -259,14 +259,14 @@ describe('startSessionManager', () => {
       }))
 
       // cookie correctly set
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain('first')
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain('second')
+      expect(getCookie(SESSION_IDENTIFIER)).toContain('first')
+      expect(getCookie(SESSION_IDENTIFIER)).toContain('second')
 
       clock.tick(COOKIE_ACCESS_DELAY / 2)
 
       // scheduled expandOrRenewSession should not use cached value
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain('first')
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain('second')
+      expect(getCookie(SESSION_IDENTIFIER)).toContain('first')
+      expect(getCookie(SESSION_IDENTIFIER)).toContain('second')
     })
 
     it('should have independent tracking types', () => {
@@ -326,16 +326,16 @@ describe('startSessionManager', () => {
       sessionManager.expireObservable.subscribe(expireSessionSpy)
 
       expect(sessionManager.findActiveSession()).toBeDefined()
-      expect(getCookie(SESSION_COOKIE_NAME)).toBeDefined()
+      expect(getCookie(SESSION_IDENTIFIER)).toBeDefined()
 
       clock.tick(SESSION_TIME_OUT_DELAY)
       expect(sessionManager.findActiveSession()).toBeUndefined()
-      expect(getCookie(SESSION_COOKIE_NAME)).toBeUndefined()
+      expect(getCookie(SESSION_IDENTIFIER)).toBeUndefined()
       expect(expireSessionSpy).toHaveBeenCalled()
     })
 
     it('should renew an existing timed out session', () => {
-      setCookie(SESSION_COOKIE_NAME, `id=abcde&first=tracked&created=${Date.now() - SESSION_TIME_OUT_DELAY}`, DURATION)
+      setCookie(SESSION_IDENTIFIER, `id=abcde&first=tracked&created=${Date.now() - SESSION_TIME_OUT_DELAY}`, DURATION)
 
       const sessionManager = startSessionManager(COOKIE_OPTIONS, FIRST_PRODUCT_KEY, () => ({
         isTracked: true,
@@ -345,12 +345,12 @@ describe('startSessionManager', () => {
       sessionManager.expireObservable.subscribe(expireSessionSpy)
 
       expect(sessionManager.findActiveSession()!.id).not.toBe('abcde')
-      expect(getCookie(SESSION_COOKIE_NAME)).toContain(`created=${Date.now()}`)
+      expect(getCookie(SESSION_IDENTIFIER)).toContain(`created=${Date.now()}`)
       expect(expireSessionSpy).not.toHaveBeenCalled() // the session has not been active from the start
     })
 
     it('should not add created date to an existing session from an older versions', () => {
-      setCookie(SESSION_COOKIE_NAME, 'id=abcde&first=tracked', DURATION)
+      setCookie(SESSION_IDENTIFIER, 'id=abcde&first=tracked', DURATION)
 
       const sessionManager = startSessionManager(COOKIE_OPTIONS, FIRST_PRODUCT_KEY, () => ({
         isTracked: true,
@@ -358,7 +358,7 @@ describe('startSessionManager', () => {
       }))
 
       expect(sessionManager.findActiveSession()!.id).toBe('abcde')
-      expect(getCookie(SESSION_COOKIE_NAME)).not.toContain('created=')
+      expect(getCookie(SESSION_IDENTIFIER)).not.toContain('created=')
     })
   })
 

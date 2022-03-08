@@ -3,6 +3,7 @@ export {
   InitConfiguration,
   buildCookieOptions,
   DefaultPrivacyLevel,
+  ClientStorageType,
   validateAndBuildConfiguration,
 } from './configuration'
 export { createEndpointBuilder, EndpointBuilder } from './endpointBuilder'

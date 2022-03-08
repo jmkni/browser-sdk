@@ -14,6 +14,14 @@ export const DefaultPrivacyLevel = {
 } as const
 export type DefaultPrivacyLevel = typeof DefaultPrivacyLevel[keyof typeof DefaultPrivacyLevel]
 
+export const ClientStorageType = {
+  COOKIE: 'cookie',
+  SESSIONSTORAGE: 'sessionstorage',
+  LOCALSTORAGE: 'localstorage',
+  MEMORY: 'memory'
+}
+export type ClientStorageType = typeof ClientStorageType[keyof typeof ClientStorageType]
+
 export interface InitConfiguration {
   // global options
   clientToken: string

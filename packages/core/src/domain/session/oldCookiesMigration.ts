@@ -1,9 +1,11 @@
 import type { CookieOptions } from '../../browser/cookie'
 import { getCookie } from '../../browser/cookie'
+import { ClientStorageType } from '../configuration'
 import type { SessionState } from './sessionStore'
-import { SESSION_COOKIE_NAME, persistSession } from './sessionCookieStore'
+import { SESSION_IDENTIFIER, persistSession } from './sessionClientStore'
 
-export const OLD_SESSION_COOKIE_NAME = '_dd'
+
+export const OLD_SESSION_IDENTIFIER = '_dd'
 export const OLD_RUM_COOKIE_NAME = '_dd_r'
 export const OLD_LOGS_COOKIE_NAME = '_dd_l'
 
@@ -16,8 +18,8 @@ export const LOGS_SESSION_KEY = 'logs'
  * to allow older sdk versions to be upgraded to newer versions without compatibility issues.
  */
 export function tryOldCookiesMigration(options: CookieOptions) {
-  const sessionString = getCookie(SESSION_COOKIE_NAME)
-  const oldSessionId = getCookie(OLD_SESSION_COOKIE_NAME)
+  const sessionString = getCookie(SESSION_IDENTIFIER)
+  const oldSessionId = getCookie(OLD_SESSION_IDENTIFIER)
   const oldRumType = getCookie(OLD_RUM_COOKIE_NAME)
   const oldLogsType = getCookie(OLD_LOGS_COOKIE_NAME)
   if (!sessionString) {
@@ -31,6 +33,6 @@ export function tryOldCookiesMigration(options: CookieOptions) {
     if (oldRumType && /^[012]$/.test(oldRumType)) {
       session[RUM_SESSION_KEY] = oldRumType
     }
-    persistSession(session, options)
+    persistSession(session, options, ClientStorageType.COOKIE)
   }
 }
