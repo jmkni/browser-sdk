@@ -16,6 +16,17 @@
 
 ---
 
+## v4.6.0
+
+- Added 'Client Storage Type' configuration option
+- 🎨 Avoid template syntax when not needed ([#1372](https://github.com/DataDog/browser-sdk/pull/1372))
+- 📦 [RUMF-1168] update typescript ([#1368](https://github.com/DataDog/browser-sdk/pull/1368))
+- ⚡️ [RUMF-1171] prefer const enums ([#1364](https://github.com/DataDog/browser-sdk/pull/1364))
+- 🔥 Clear remaining code of network error removal ([#1367](https://github.com/DataDog/browser-sdk/pull/1367))
+- ⚡️ Process buffered performance entries in an idle callback ([#1337](https://github.com/DataDog/browser-sdk/pull/1337))
+- ⚡️ [RUMF-1043] remove TSLib dependency ([#1347](https://github.com/DataDog/browser-sdk/pull/1347))
+- ✨[RUMF-1188] add telemetry event types ([#1353](https://github.com/DataDog/browser-sdk/pull/1353))
+
 ## v4.5.0
 
 - ⚡️ [RUMF-1115] throttle view updates by addTiming ([#1355](https://github.com/DataDog/browser-sdk/pull/1355))
